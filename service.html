@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width; initial-scale=1.0; minimum-scale=1.0; maximum-scale=1.0; user-scalable=no"/>
+<meta name="author" content="">
+<meta name="description" content=""/>
+<meta name="format-detection" content="telephone=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="white" />
+<title>机器人对话框</title>
+<link rel="stylesheet" href="robot/css/robot.css?6"/>
+</head>
+<body>
+<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.0.min.js "></script>
+<script src="robot/robot.min.js?6"></script>
+<script>
+new Robot({
+	mod: 'normal'																		//显示模式，mini侧边，normal默认模式
+	, ismax: true																		//初始时是否最大化窗口，normal模式时有效
+	, url: 'http://api.smartnlp.cn/cloud/robot/'										//请求的接口地址
+	, appid: '55d28d61d3a93df500131c24'
+	, 'minWidth': 800																	//最小宽度
+	//, 'minHeight': 576																//最小高度
+	//, title: '测试标题' 																//头部title文本
+	, quicks: [																			//快速提交问题列表
+		'我买的商品售后政策是怎样'
+		, '订单提交成功后商品降价了，可以退给我差价吗？'
+		, '订单提交成功后，还能修改吗？'
+		, '怎么取消订单'
+		, '货到哪里了，怎么不更新物流啊'
+		, '我退货了运费怎么算'
+		, '取消订单怎么退款'
+		, '退款到哪儿'
+		, '拒收有什么后果'
+	]
+	, tools: [																			//左侧工具栏，格式{label: '文本',icon: 'icon图标地址60*60', 
+		{label: '天气预报',icon: 'http://img.alicdn.com/imgextra/i3/TB16M.kJpXXXXXAXVXXwu0bFXXX.png', href:'#'}
+		, {label: '听首歌',icon: 'http://img.alicdn.com/imgextra/i3/TB17xcEJpXXXXXfXXXXwu0bFXXX.png', href:'#'}
+		, {label: '指南针',icon: 'http://img.alicdn.com/imgextra/i1/TB10VUAJpXXXXczXXXXwu0bFXXX.png', href:'#'}
+		, {label: '常用帮助',icon: 'http://img.alicdn.com/imgextra/i2/TB1FX7tJpXXXXccXpXXwu0bFXXX.png', href:'#'}
+	]
+	/*, colors: {																		//设置颜色，header:头部颜色，border:边框颜色（mini模式下有效），button:发送按钮颜色
+		'header': '#2d8ef2'
+		, 'border': '#2d8ef2'
+		, 'button': '#2d8ef2'
+	}*/
+	//, zindex: 999																		//浮动层zindex
+	, showside: true																	//是否显示左边栏
+	, placeholder: '文本框提示文本'
+	//, callImg: 'http://img.alicdn.com/imgextra/i4/TB1tMo3JpXXXXbwXVXXwu0bFXXX.png'	//客服图片　80*80像素
+	//, callUrl: '#'																	//点击客服图片后的链接地址
+	//, codeImg: 'http://img.alicdn.com/imgextra/i2/TB19_XqJFXXXXa6XXXXwu0bFXXX.png'	//二维码图片　80*80像素
+	//, codeBigImg: 'http://img.alicdn.com/imgextra/i1/TB197MVJpXXXXXuXVXXSutbFXXX.jpg'	//点击二维码显示的大图片　262*262像素
+	//, welcome: '您好'																	//机器人欢迎语
+	//, nick: '小智'	
+	//, autoblur: false																	//消息发送后文本框是否自动失去焦点
+});
+</script>
+</body>
+</html>
