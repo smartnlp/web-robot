@@ -21,7 +21,7 @@
 
 (3) 手机端
 
-![phone_window](http://www.smartnlp.cn/phone.jpg)
+![phone_window](http://www.smartnlp.cn/phone1.jpg)
 
 
 ## 使用方法：
