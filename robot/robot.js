@@ -2091,7 +2091,7 @@
 					if(data.answer.length > 150){
 						$('.'+ cssfix +'msg', $answer).css('min-width', '75%');
 					}
-					$('.'+ cssfix +'msg-mm .'+ cssfix +'htmcont', $answer).html(data.answer+'&nbsp;');
+					$('.'+ cssfix +'msg-mm .'+ cssfix +'htmcont', $answer).html(!data.answer ? '&nbsp;' : data.answer);
 					$('.'+ cssfix +'chat-headimg span', $answer).text(_con.nick +' '+ dateFormat.call(new Date(),'hh:mm:ss'));
 					_this.scroll();
 				}
