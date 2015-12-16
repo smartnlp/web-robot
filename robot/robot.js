@@ -1641,7 +1641,6 @@
 			if (type == 'DOMMouseScroll' || type == 'mousewheel') {
 				event.delta = (event.wheelDelta) ? event.wheelDelta / 120 : -(event.detail || 0) / 3;
 			}
-			//alert(event.delta);
 			if (event.srcElement && !event.target) {
 				event.target = event.srcElement;	
 			}
@@ -1654,6 +1653,9 @@
 		};
 		if (win.addEventListener) {
 			return function(el, type, fn, capture) {
+				if(!el){
+					return false;
+				};
 				if (type === "mousewheel" && document.mozHidden !== undefined) {
 					type = "DOMMouseScroll";
 				}
@@ -1663,6 +1665,9 @@
 			}
 		} else if (win.attachEvent) {
 			return function(el, type, fn, capture) {
+				if(!el){
+					return false;
+				};
 				el.attachEvent("on" + type, function(event) {
 					event = event || win.event;
 					fn.call(el, _eventCompat(event));	
@@ -1776,7 +1781,9 @@
 		};
 		html.push('<div id="robot" onselectstart="return false;" class="smartnlp-robot '+ (_isMobile ? cssfix +'mobile '+ cssfix +'box' : '') +' '+  (_con.mod === 'mini' ? cssfix +'mini' : '') +'" style="'+ (_con.mod === 'mini' ? 'border-color:'+ _colors.border : '') +';position:'+ (_isMobile && _con.mod !== 'mini' ? 'static' : 'fixed') +';z-index:'+ _con.zindex +'">')
 		if(_isMobile && _con.mod === 'mini'){
-			html.push('<a href="'+ _con.newurl +'" target="_blank" class="'+ cssfix +'mobile-title" style="background-color: '+ _colors.header +';"><span></span>咨询在线客服 &gt;</a>');
+			html.push('<a href="'+ _con.newurl +'" target="_blank" class="'+ cssfix +'mobile-title" style="background-color: '+ _colors.header +';"><span class="'+ cssfix +'icon"></span>咨询在线客服 &gt;</a>');
+			html.push('</div></div>');
+			return html.join('');
 		}
 		html.push('<div class="'+ cssfix +'header" style="background-color: '+ _colors.header +';" onselectstart="return false">');
 		html.push('<div class="'+ cssfix +'logo">');
@@ -1799,15 +1806,18 @@
 		html.push('</div>');
 		html.push('</div>');
 		//content
-		html.push('<div class="'+ cssfix +'content '+ (_isMobile ? cssfix +'box' : '') +'">');
+		html.push('<div class="'+ cssfix +'content">');
 		//if(_con.mod === 'mini'){
-			html.push('<div class="'+ cssfix +'bar" style="background-color:'+_colors.border+';">');
-			html.push('<a href="javascript:void(0);"></a>');
-			html.push('</div>');
+			html.push('<ul class="'+ cssfix +'slide">');
+			html.push('<li class="'+ cssfix +'slide-btn" style="background-color:'+_colors.border+';"><a href="javascript:void(0);"><span class="'+ cssfix +'icon"></span>机器人</a></li>');
+			if(!!_con.feedBtn.url){
+				html.push('<li class="'+ cssfix +'slide-feed" style="background-color:'+_con.feedBtn.color+';"><a href="'+ _con.feedBtn.url +'" target="_blank"><span class="'+ cssfix +'icon"></span>反馈</a></li>');
+			};
+			html.push('</ul>');
 		//}
 		//左边区域
-		html.push('<div class="'+ cssfix +'fl-area '+ (_isMobile ? cssfix +'box '+ cssfix +'box-flex' : '') +'" style="'+ (!_con.showside ? 'padding-right: 0;' : '') +'">');
-		html.push('<div class="'+ cssfix +'nano '+ (_isMobile ? cssfix +'box-flex' : '') +'">');
+		html.push('<div class="'+ cssfix +'fl-area" style="'+ (!_con.showside ? 'padding-right: 0;' : '') +'">');
+		html.push('<div class="'+ cssfix +'nano">');
 		html.push('<div class="'+ cssfix +'chat"></div>');
 		//html.push('<div class="'+ cssfix +'pane" style="display: block; opacity: 1; visibility: visible;"><div class="'+ cssfix +'slider" style="height: 110px; top: 502px;"></div></div>');
 		html.push('</div>');
@@ -1869,11 +1879,9 @@
 		}
 		html.push('</div>');
 		html.push('</div>');
-		var $wrap = $(html.join(''));
-		$('body').append($wrap);
-		return $wrap;
+		return html.join('');
 	};
-	var Robot = function(config){	
+	var Robot = function(config){
 		this.con = $.extend({
 			mod: 'normal'																		//显示模式，mini侧边，normal默认模式
 			, ismax: false																		//初始时是否最大化窗口，normal模式时有效
@@ -1900,6 +1908,7 @@
 			, nick: '小智'																		//机器人名字
 			, autoblur: false																	//消息发送后文本框是否自动失去焦点
 			, logo: 'http://img.alicdn.com/imgextra/i3/TB1UhE3JpXXXXbaXpXXwu0bFXXX.png'
+			, feedBtn: { color: '#20a56e'}														//反馈按钮默认颜色
 		}, config);
 		this.init();
 	};
@@ -1908,7 +1917,7 @@
 		, 'init': function(){
 			var _this = this
 				, _con = _this.con;
-			var $wrap = _this.wrap = generateHtml(_this);
+			var $wrap = _this.wrap = $(generateHtml(_this));
 			//var $w = $(win);
 			_this.chat = $('.'+ cssfix +'chat', $wrap);
 			_this.input = $('textarea', $wrap);
@@ -1916,7 +1925,7 @@
 			var $edit = $('.'+ cssfix +'edit', $wrap);
 			var $bigCode = $('.'+ cssfix +'big-code', $wrap);
 			$('.'+ cssfix +'fr-nav a', $wrap).on('click', $.proxy(_this.tab, _this));
-			$('.'+ cssfix +'icon-max,.'+ cssfix +'bar a', $wrap).on('click', $.proxy(_this['zoom'], _this));
+			$('.'+ cssfix +'icon-max,.'+ cssfix +'slide-btn', $wrap).on('click', $.proxy(_this['zoom'], _this));
 			$('.'+ cssfix +'btn-send', $wrap).on('click', $.proxy(_this['submit'], _this));
 			$('.'+ cssfix +'fr-panel ul a', $wrap).on('click', function(){_this.send($(this).text());});
 			$('.'+ cssfix +'code a', $wrap).on('click', function(){
@@ -1949,7 +1958,8 @@
 						this.value = _con.placeholder;
 						this.style.color = '#999';
 					};
-				} if(_isPad){
+				};
+				if(_isPad){
 					$wrap.css({'top': 0, "bottom": 'inherit'});
 				};
 			}).on('focus', function(){
@@ -1980,9 +1990,13 @@
 			addEvent($wrap.get(0), "mousewheel", function(e){
 				e.preventDefault && e.preventDefault();
 			});
+			if(_isMobile && _con.mod !== 'mini'){
+				$('body').css({'overflow': 'auto','height': 'auto','background-color':'#fafafa'}).html('');
+			}
+			$('body').append($wrap);
 			_this.welcome();
 			_this.resize();
-			_this.move('.'+ cssfix +'header')
+			_this.move('.'+ cssfix +'header');
 			$(win).resize($.proxy(_this.resize, this));
 		}
 		//显示欢迎词
@@ -2065,7 +2079,12 @@
 		//滚动对话内容到最后
 		, 'scroll': function(){
 			var _this = this;
-			_this.view.scrollTop(_isMobile ? 100000 : _this.chat.height() - _this.view.height() + 20);
+			if(_isMobile){
+				$('body').scrollTop(100000);
+			}else{
+				_this.view.scrollTop(_this.chat.height() - _this.view.height() + 20);
+			}
+			
 		}
 		//发送一条消息
 		, 'send': function(text){
@@ -2082,7 +2101,6 @@
 				, $answer = $('<div class="'+ cssfix +'chat-replay"><div class="'+ cssfix +'chat-headimg" >'+ (!!_con.headImg ? '<img src="'+ _con.headImg +'"/>' : '') +'<span>'+ _con.nick +' '+ dateFormat.call(new Date(),'hh:mm:ss') +'</span></div><table class="'+ cssfix +'msg" cellspacing="0" cellpadding="0"><tbody><tr><td class="bg-msg-lr '+ cssfix +'msg-lt"></td><td class="bg-msg-tb '+ cssfix +'msg-tt"></td><td class="bg-msg-lr '+ cssfix +'msg-rt"></td></tr><tr><td class="bg-msg-lr '+ cssfix +'msg-lm"><span class="bg-msg-lr"></span></td><td class="'+ cssfix +'msg-mm"><div class="'+ cssfix +'htmcont"><img src="http://img.alicdn.com/imgextra/i3/TB1tAEJJpXXXXXraXXXtKXbFXXX.gif"/></div></td><td class="bg-msg-lr '+ cssfix +'msg-rm"></td></tr><tr><td class="bg-msg-lr '+ cssfix +'msg-lb"></td><td class="bg-msg-tb '+ cssfix +'msg-bm"></td><td class="bg-msg-lr '+ cssfix +'msg-rb"></td></tr><tr><td></td></tr></tbody></table></div>');
 			_this.chat.append($question).append($answer);
 			_this.scroll();
-			//console.log( _con.url + _con.appid +'/answer');
 			_jsonp({
 				'url': _con.url + _con.appid +'/answer'
 				, 'data' : {'q': encodeURIComponent(text)}
@@ -2132,7 +2150,7 @@
 					if(_con.mod === 'mini'){
 						_this.wrap.css({'height': '44px'});
 					}else{
-						_this.wrap.css({'height': '100%'}).find('.'+ cssfix +'content').height(_h - 46);
+						//_this.wrap.css({'height': '100%'}).find('.'+ cssfix +'content').height(_h - 46);
 					};
 				};
 			$('.'+ cssfix +'icon-max', _this.wrap)[(_con.ismax ? 'add' : 'remove') +'Class'](cssfix +'icon-nor');
@@ -2196,8 +2214,6 @@
 			});
 		}
 	};
-	var test = 0;
-
 
 	//加载外部css样式
 	(function(){
@@ -2207,24 +2223,27 @@
 		cssFile.type = "text/css";
 		cssFile.rel = 'stylesheet';
 		cssFile.href = cssUrl;
+		var loadback = function(){
+			new Robot(options);
+			isload = true;
+		};
 		cssFile.onreadystatechange = function() { 
 			var r = cssFile.readyState;
-			if(!isload && (r === 'loaded' || r === 'complete')){
-				new Robot(options);
-				isload = true;
+			if(!isload && (r === 'loaded' || r === 'complete' || r === 'interactive')){
+				loadback();
 			} 
 		};
 		cssFile.onload = function(){
-			if(!isload){
-				new Robot(options);
-				isload = true;
-			}
+			!isload && loadback();
 		};
+		setTimeout(function(){
+			!isload && loadback();
+		}, 1000)
 		head.appendChild(cssFile);
 	})();
 })(this, 
 {
-	mod: 'mini'																			//显示模式，mini侧边(PC网页时在右侧，手机网页在底侧)，normal默认模式
+	mod: window.location.href.indexOf('mobile')> 0 ? 'normal' : 'mini'																			//显示模式，mini侧边(PC网页时在右侧，手机网页在底侧)，normal默认模式
 	//, ismax: false																	//初始时是否最大化窗口，PC网页时有效
 	, url: 'http://api.smartnlp.cn/cloud/robot/'										//请求的接口地址
 	, appid: '55d28d61d3a93df500131c24'
@@ -2268,7 +2287,11 @@
 	//, welcome: '您好'																	//机器人欢迎语
 	//, nick: '小智'	
 	//, autoblur: false																	//消息发送后文本框是否自动失去焦点
-	, newurl: 'http://www.smartnlp.cn/test.html'										//新窗口打开新页面的URL,手机版有效
+	, newurl: '?mobile'										//新窗口打开新页面的URL,手机版有效
 	, logo: 'http://img1.cache.netease.com/3g/img14/zhuzhan/logo1.png'
 	, headImg: 'http://himg.baidu.com/sys/portrait/hotitem/wildkid/1'
+	, feedBtn: {
+		url: '#'																		//反馈的链接地址
+		, color: '#20a56e'																//反馈颜色背景
+	}
 });
