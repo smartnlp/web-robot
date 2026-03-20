@@ -2,99 +2,659 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web Robot 聊天机器人</title>
-    <link rel="stylesheet" href="robot/css/robot.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            max-height: 800px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .message.bot .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin-right: 10px;
+        }
+
+        .message.user .message-avatar {
+            background: #28a745;
+            margin-left: 10px;
+            order: 2;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .message.bot .message-content {
+            background: #fff;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .message.user .message-time {
+            text-align: right;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background: #fff;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+
+        .typing-indicator.active {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .chat-input-container {
+            padding: 15px 20px;
+            background: #fff;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-send:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: #666;
+        }
+
+        .export-menu {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 8px;
+            display: none;
+            min-width: 150px;
+            z-index: 100;
+        }
+
+        .export-menu.active {
+            display: block;
+        }
+
+        .export-menu-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .export-menu-item:hover {
+            background: #f0f0f0;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #333;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 0;
+            }
+
+            .chat-container {
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+            }
+
+            .chat-header h1 {
+                font-size: 1rem;
+            }
+
+            .btn-icon span {
+                display: none;
+            }
+
+            .message-content {
+                max-width: 80%;
+                padding: 10px 14px;
+                font-size: 0.95rem;
+            }
+
+            .chat-input-container {
+                padding: 10px 15px;
+            }
+
+            .chat-input {
+                padding: 10px 15px;
+            }
+
+            .btn-send {
+                padding: 10px 18px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .chat-container {
+                height: 100vh;
+                max-height: 100vh;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div id="robot-container" class="robot-container">
-        <!-- 聊天窗口 -->
-        <div class="robot-chat" id="robot-chat">
-            <!-- 头部 -->
-            <div class="robot-header">
-                <div class="robot-header-title">
-                    <span class="robot-icon">🤖</span>
-                    <span class="robot-name">智能助手</span>
-                </div>
-                <div class="robot-header-actions">
-                    <button class="robot-btn-export" id="btn-export" title="导出聊天记录">
-                        <span>📥</span>
-                    </button>
-                    <button class="robot-btn-clear" id="btn-clear" title="清空聊天记录">
-                        <span>🗑️</span>
-                    </button>
-                    <button class="robot-btn-close" id="btn-close" title="关闭">
-                        <span>✕</span>
-                    </button>
-                </div>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🤖 Web Robot</h1>
+            <div class="header-actions">
+                <button class="btn-icon" onclick="toggleExportMenu()">
+                    📥 <span>导出</span>
+                </button>
+                <button class="btn-icon" onclick="clearChat()">
+                    🗑️ <span>清空</span>
+                </button>
             </div>
+            <div class="export-menu" id="exportMenu">
+                <div class="export-menu-item" onclick="exportChat('txt')">📄 导出为 TXT</div>
+                <div class="export-menu-item" onclick="exportChat('json')">📋 导出为 JSON</div>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="empty-state" id="emptyState">
+                <div class="empty-state-icon">👋</div>
+                <h3>开始对话吧</h3>
+                <p>发送消息与机器人开始聊天</p>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        </div>
+
+        <div class="chat-input-container">
+            <input 
+                type="text" 
+                class="chat-input" 
+                id="messageInput" 
+                placeholder="输入消息..." 
+                maxlength="500"
+                onkeypress="handleKeyPress(event)"
+            >
+            <button class="btn-send" id="sendBtn" onclick="sendMessage()">
+                发送
+            </button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 聊天记录存储
+        let chatHistory = [];
+        let isTyping = false;
+
+        // DOM 元素
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const emptyState = document.getElementById('emptyState');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const exportMenu = document.getElementById('exportMenu');
+        const toast = document.getElementById('toast');
+
+        // 机器人回复模板
+        const botResponses = [
+            "你好！很高兴为你服务。",
+            "这是一个很有趣的话题，请继续说。",
+            "我明白了，还有其他问题吗？",
+            "谢谢你的分享！",
+            "我在听，请继续。",
+            "这是个好问题，让我想想...",
+            "你可以详细说说吗？",
+            "收到！还有其他需要帮助的吗？",
+            "哈哈，真有意思！",
+            "好的，我理解了。"
+        ];
+
+        // 发送消息
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || isTyping) return;
+
+            // 隐藏空状态
+            if (emptyState) {
+                emptyState.style.display = 'none';
+            }
+
+            // 添加用户消息
+            addMessage('user', message);
+            messageInput.value = '';
+
+            // 显示输入指示器
+            showTypingIndicator();
+
+            // 模拟机器人回复
+            isTyping = true;
+            sendBtn.disabled = true;
+
+            setTimeout(() => {
+                hideTypingIndicator();
+                const response = getBotResponse(message);
+                addMessage('bot', response);
+                isTyping = false;
+                sendBtn.disabled = false;
+            }, 1000 + Math.random() * 1000);
+        }
+
+        // 添加消息到聊天界面
+        function addMessage(type, content) {
+            const messageData = {
+                type: type,
+                content: content,
+                timestamp: new Date().toISOString()
+            };
+            chatHistory.push(messageData);
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+
+            const avatar = type === 'bot' ? '🤖' : '👤';
+            const time = formatTime(new Date());
+
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div>
+                    <div class="message-content">${escapeHtml(content)}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        // 获取机器人回复
+        function getBotResponse(userMessage) {
+            const lowerMessage = userMessage.toLowerCase();
             
-            <!-- 消息区域 -->
-            <div class="robot-messages" id="robot-messages">
-                <div class="robot-message robot-message-bot">
-                    <div class="robot-avatar">🤖</div>
-                    <div class="robot-bubble">
-                        <div class="robot-content">你好！我是智能助手，有什么可以帮助你的吗？</div>
-                        <div class="robot-time" id="welcome-time"></div>
+            // 简单的关键词匹配
+            if (lowerMessage.includes('你好') || lowerMessage.includes('嗨') || lowerMessage.includes('hi')) {
+                return '你好！很高兴见到你！有什么我可以帮助你的吗？';
+            }
+            if (lowerMessage.includes('再见') || lowerMessage.includes('拜拜')) {
+                return '再见！祝你有个愉快的一天！';
+            }
+            if (lowerMessage.includes('谢谢')) {
+                return '不客气！很高兴能帮到你！';
+            }
+            if (lowerMessage.includes('时间') || lowerMessage.includes('几点')) {
+                return `现在是 ${new Date().toLocaleString('zh-CN')}`;
+            }
+            if (lowerMessage.includes('名字') || lowerMessage.includes('是谁')) {
+                return '我是 Web Robot，一个纯前端的聊天机器人！';
+            }
+
+            // 随机回复
+            return botResponses[Math.floor(Math.random() * botResponses.length)];
+        }
+
+        // 显示输入指示器
+        function showTypingIndicator() {
+            typingIndicator.classList.add('active');
+            scrollToBottom();
+        }
+
+        // 隐藏输入指示器
+        function hideTypingIndicator() {
+            typingIndicator.classList.remove('active');
+        }
+
+        // 滚动到底部
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 格式化时间
+        function formatTime(date) {
+            return date.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 处理回车键
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // 切换导出菜单
+        function toggleExportMenu() {
+            exportMenu.classList.toggle('active');
+        }
+
+        // 点击外部关闭菜单
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.btn-icon') && !event.target.closest('.export-menu')) {
+                exportMenu.classList.remove('active');
+            }
+        });
+
+        // 导出聊天记录
+        function exportChat(format) {
+            if (chatHistory.length === 0) {
+                showToast('没有可导出的聊天记录');
+                return;
+            }
+
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+            let content, filename, mimeType;
+
+            if (format === 'txt') {
+                content = generateTxtContent();
+                filename = `聊天记录_${timestamp}.txt`;
+                mimeType = 'text/plain;charset=utf-8';
+            } else {
+                content = JSON.stringify(chatHistory, null, 2);
+                filename = `聊天记录_${timestamp}.json`;
+                mimeType = 'application/json;charset=utf-8';
+            }
+
+            downloadFile(content, filename, mimeType);
+            exportMenu.classList.remove('active');
+            showToast(`已导出为 ${format.toUpperCase()} 格式`);
+        }
+
+        // 生成TXT格式内容
+        function generateTxtContent() {
+            let content = '================================\n';
+            content += '      聊天记录导出文件\n';
+            content += '================================\n\n';
+            
+            chatHistory.forEach((msg, index) => {
+                const time = new Date(msg.timestamp).toLocaleString('zh-CN');
+                const sender = msg.type === 'user' ? '我' : '机器人';
+                content += `[${time}] ${sender}:\n`;
+                content += `${msg.content}\n`;
+                content += '--------------------------------\n\n';
+            });
+
+            content += '================================\n';
+            content += `共 ${chatHistory.length} 条消息\n`;
+            content += '================================\n';
+
+            return content;
+        }
+
+        // 下载文件
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // 清空聊天记录
+        function clearChat() {
+            if (chatHistory.length === 0) {
+                showToast('聊天记录已经是空的');
+                return;
+            }
+
+            if (confirm('确定要清空所有聊天记录吗？')) {
+                chatHistory = [];
+                chatMessages.innerHTML = `
+                    <div class="empty-state" id="emptyState">
+                        <div class="empty-state-icon">👋</div>
+                        <h3>开始对话吧</h3>
+                        <p>发送消息与机器人开始聊天</p>
                     </div>
-                </div>
-            </div>
-            
-            <!-- 快捷功能栏 -->
-            <div class="robot-toolbar" id="robot-toolbar">
-                <button class="toolbar-btn" data-action="export-txt" title="导出为TXT">📄 TXT</button>
-                <button class="toolbar-btn" data-action="export-json" title="导出为JSON">📋 JSON</button>
-            </div>
-            
-            <!-- 输入区域 -->
-            <div class="robot-input-area">
-                <div class="robot-input-box">
-                    <textarea 
-                        id="robot-input" 
-                        class="robot-input" 
-                        placeholder="请输入您的问题..."
-                        rows="1"
-                    ></textarea>
-                    <button class="robot-send-btn" id="robot-send">
-                        <span>发送</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 悬浮按钮 -->
-        <div class="robot-float-btn" id="robot-float-btn">
-            <span class="robot-float-icon">💬</span>
-            <span class="robot-float-text">咨询</span>
-        </div>
-    </div>
+                `;
+                showToast('聊天记录已清空');
+            }
+        }
 
-    <!-- 导出选项弹窗 -->
-    <div class="robot-modal" id="export-modal">
-        <div class="robot-modal-content">
-            <div class="robot-modal-header">
-                <h3>导出聊天记录</h3>
-                <button class="robot-modal-close" id="modal-close">✕</button>
-            </div>
-            <div class="robot-modal-body">
-                <p>请选择导出格式：</p>
-                <div class="export-options">
-                    <button class="export-btn" data-format="txt">
-                        <span class="export-icon">📄</span>
-                        <span class="export-label">导出为 TXT</span>
-                        <span class="export-desc">纯文本格式，便于阅读</span>
-                    </button>
-                    <button class="export-btn" data-format="json">
-                        <span class="export-icon">📋</span>
-                        <span class="export-label">导出为 JSON</span>
-                        <span class="export-desc">结构化数据，便于处理</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+        // 显示提示
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
 
-    <script src="robot/robot.js"></script>
+        // 页面加载完成后聚焦输入框
+        window.onload = function() {
+            messageInput.focus();
+        };
+    </script>
 </body>
 </html>
