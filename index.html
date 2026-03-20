@@ -1,24 +1,660 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-<meta name="author" content="">
-<meta name="description" content=""/>
-<meta name="format-detection" content="telephone=no" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="white" />
-<title>机器人对话框</title>
-<style type="text/css">
-body{ margin: 0; font-size: 12px; background-color: #fff;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Robot 聊天机器人</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            max-height: 800px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .message.bot .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin-right: 10px;
+        }
+
+        .message.user .message-avatar {
+            background: #28a745;
+            margin-left: 10px;
+            order: 2;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .message.bot .message-content {
+            background: #fff;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .message.user .message-time {
+            text-align: right;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background: #fff;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+
+        .typing-indicator.active {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .chat-input-container {
+            padding: 15px 20px;
+            background: #fff;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-send:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: #666;
+        }
+
+        .export-menu {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 8px;
+            display: none;
+            min-width: 150px;
+            z-index: 100;
+        }
+
+        .export-menu.active {
+            display: block;
+        }
+
+        .export-menu-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        .export-menu-item:hover {
+            background: #f0f0f0;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #333;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 0;
+            }
+
+            .chat-container {
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+            }
+
+            .chat-header h1 {
+                font-size: 1rem;
+            }
+
+            .btn-icon span {
+                display: none;
+            }
+
+            .message-content {
+                max-width: 80%;
+                padding: 10px 14px;
+                font-size: 0.95rem;
+            }
+
+            .chat-input-container {
+                padding: 10px 15px;
+            }
+
+            .chat-input {
+                padding: 10px 15px;
+            }
+
+            .btn-send {
+                padding: 10px 18px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .chat-container {
+                height: 100vh;
+                max-height: 100vh;
+            }
+        }
+    </style>
 </head>
 <body>
-<h1>离骚</h1>
-<div>
-    帝高阳之苗裔兮，朕皇考曰伯庸。<br>摄提贞于孟陬兮，惟庚寅吾以降。<br>皇览揆余初度兮，肇锡余以嘉名：<br>名余曰正则兮，字余曰灵均。<br>纷吾既有此内美兮，又重之以修能。<br>扈江离与辟芷兮，纫秋兰以为佩。<br>汨余若将不及兮，恐年岁之不吾与。<br>朝搴阰之木兰兮，夕揽洲之宿莽。<br>日月忽其不淹兮，春与秋其代序。<br>惟草木之零落兮，恐美人之迟暮。(惟 通：唯)<br>不抚壮而弃秽兮，何不改乎此度?<br>乘骐骥以驰骋兮，来吾道夫先路！<br>昔三后之纯粹兮，固众芳之所在。<br>杂申椒与菌桂兮，岂惟纫夫蕙茝！<br>彼尧、舜之耿介兮，既遵道而得路。<br>何桀纣之猖披兮，夫惟捷径以窘步。<br>惟夫党人之偷乐兮，路幽昧以险隘。<br>岂余身之殚殃兮，恐皇舆之败绩！<br>忽奔走以先后兮，及前王之踵武。<br>荃不查余之中情兮，反信谗而齌怒。<br>余固知謇謇之为患兮，忍而不能舍也。<br>指九天以为正兮，夫惟灵修之故也。<br>曰黄昏以为期兮，羌中道而改路！<br>初既与余成言兮，后悔遁而有他。<br>余既不难夫离别兮，伤灵修之数化。<br>余既滋兰之九畹兮，又树蕙之百亩。<br>畦留夷与揭车兮，杂杜衡与芳芷。<br>冀枝叶之峻茂兮，愿俟时乎吾将刈。<br>虽萎绝其亦何伤兮，哀众芳之芜秽。<br>众皆竞进以贪婪兮，凭不厌乎求索。<br>羌内恕己以量人兮，各兴心而嫉妒。<br>忽驰骛以追逐兮，非余心之所急。<br>老冉冉其将至兮，恐修名之不立。<br>朝饮木兰之坠露兮，夕餐秋菊之落英。<br>苟余情其信姱以练要兮，长顑颔亦何伤。<br>掔木根以结茞兮，贯薜荔之落蕊。<br>矫菌桂以纫蕙兮，索胡绳之纚纚。<br>謇吾法夫前修兮，非世俗之所服。<br>虽不周于今之人兮，愿依彭咸之遗则。<br>长太息以掩涕兮，哀民生之多艰。<br>余虽好修姱以鞿羁兮，謇朝谇而夕替。<br>既替余以蕙纕兮，又申之以揽茝。<br>亦余心之所善兮，虽九死其犹未悔。<br>怨灵修之浩荡兮，终不察夫民心。<br>众女嫉余之蛾眉兮，谣诼谓余以善淫。<br>固时俗之工巧兮，偭规矩而改错。<br>背绳墨以追曲兮，竞周容以为度。<br>忳郁邑余侘傺兮，吾独穷困乎此时也。<br>宁溘死以流亡兮，余不忍为此态也。<br>鸷鸟之不群兮，自前世而固然。<br>何方圜之能周兮，夫孰异道而相安？<br>屈心而抑志兮，忍尤而攘诟。<br>伏清白以死直兮，固前圣之所厚。<br>悔相道之不察兮，延伫乎吾将反。<br>回朕车以复路兮，及行迷之未远。<br>步余马于兰皋兮，驰椒丘且焉止息。<br>进不入以离尤兮，退将复修吾初服。<br>制芰荷以为衣兮，集芙蓉以为裳。<br>不吾知其亦已兮，苟余情其信芳。<br>高余冠之岌岌兮，长余佩之陆离。<br>芳与泽其杂糅兮，唯昭质其犹未亏。<br>忽反顾以游目兮，将往观乎四荒。<br>佩缤纷其繁饰兮，芳菲菲其弥章。<br>民生各有所乐兮，余独好修以为常。<br>虽体解吾犹未变兮，岂余心之可惩。<br>女嬃之婵媛兮，申申其詈予，曰：<br>「鲧婞直以亡身兮，终然夭乎羽之野。<br>汝何博謇而好修兮，纷独有此姱节？<br>薋菉葹以盈室兮，判独离而不服。」<br>众不可户说兮，孰云察余之中情？<br>世并举而好朋兮，夫何茕独而不予听？<br>依前圣以节中兮，喟凭心而历兹。<br>济沅、湘以南征兮，就重华而敶词：<br>启《九辩》与《九歌》兮，夏康娱以自纵。<br>不顾难以图后兮，五子用失乎家衖。<br>羿淫游以佚畋兮，又好射夫封狐。<br>固乱流其鲜终兮，浞又贪夫厥家。<br>浇身被服强圉兮，纵欲而不忍。<br>日康娱而自忘兮，厥首用夫颠陨。<br>夏桀之常违兮，乃遂焉而逢殃。<br>后辛之菹醢兮，殷宗用而不长。<br>汤、禹俨而祗敬兮，周论道而莫差。<br>举贤才而授能兮，循绳墨而不颇。<br>皇天无私阿兮，览民德焉错辅。<br>夫维圣哲以茂行兮，苟得用此下土。<br>瞻前而顾后兮，相观民之计极。<br>夫孰非义而可用兮？孰非善而可服？<br>阽余身而危死兮，览余初其犹未悔。<br>不量凿而正枘兮，固前修以菹醢。<br>曾歔欷余郁邑兮，哀朕时之不当。<br>揽茹蕙以掩涕兮，沾余襟之浪浪。<br>跪敷衽以陈辞兮，耿吾既得此中正。<br>驷玉虬以桀鹥兮，溘埃风余上征。<br>朝发轫于苍梧兮，夕余至乎县圃。<br>欲少留此灵琐兮，日忽忽其将暮。<br>吾令羲和弭节兮，望崦嵫而勿迫。<br>路漫漫其修远兮，吾将上下而求索。<br>饮余马于咸池兮，总余辔乎扶桑。<br>折若木以拂日兮，聊逍遥以相羊。<br>前望舒使先驱兮，后飞廉使奔属。<br>鸾皇为余先戒兮，雷师告余以未具。<br>吾令凤鸟飞腾兮，继之以日夜。<br>飘风屯其相离兮，帅云霓而来御。<br>纷总总其离合兮，斑陆离其上下。<br>吾令帝阍开关兮，倚阊阖而望予。<br>时暧暧其将罢兮，结幽兰而延伫。<br>世溷浊而不分兮，好蔽美而嫉妒。<br>朝吾将济于白水兮，登阆风而绁马。<br>忽反顾以流涕兮，哀高丘之无女。<br>溘吾游此春宫兮，折琼枝以继佩。<br>及荣华之未落兮，相下女之可诒。<br>吾令丰隆乘云兮，求宓妃之所在。<br>解佩纕以结言兮，吾令謇修以为理。<br>纷总总其离合兮，忽纬繣其难迁。<br>夕归次于穷石兮，朝濯发乎洧盘。<br>保厥美以骄傲兮，日康娱以淫游。<br>虽信美而无礼兮，来违弃而改求。<br>览相观于四极兮，周流乎天余乃下。<br>望瑶台之偃蹇兮，见有娀之佚女。<br>吾令鸩为媒兮，鸩告余以不好。<br>雄鸠之鸣逝兮，余犹恶其佻巧。<br>心犹豫而狐疑兮，欲自适而不可。<br>凤皇既受诒兮，恐高辛之先我。<br>欲远集而无所止兮，聊浮游以逍遥。<br>及少康之未家兮，留有虞之二姚。<br>理弱而媒拙兮，恐导言之不固。<br>世溷浊而嫉贤兮，好蔽美而称恶。<br>闺中既以邃远兮，哲王又不寤。<br>怀朕情而不发兮，余焉能忍而与此终古？<br>索琼茅以筳篿兮，命灵氛为余占之。<br>曰：「两美其必合兮，孰信修而慕之？<br>思九州之博大兮，岂惟是其有女？」<br>曰：「勉远逝而无狐疑兮，孰求美而释女？<br>何所独无芳草兮，尔何怀乎故宇？」<br>世幽昧以昡曜兮，孰云察余之善恶？<br>民好恶其不同兮，惟此党人其独异！<br>户服艾以盈要兮，谓幽兰其不可佩。<br>览察草木其犹未得兮，岂珵美之能当？<br>苏粪壤以充祎兮，谓申椒其不芳。<br>欲从灵氛之吉占兮，心犹豫而狐疑。<br>巫咸将夕降兮，怀椒糈而要之。<br>百神翳其备降兮，九疑缤其并迎。<br>皇剡剡其扬灵兮，告余以吉故。<br>曰：「勉升降以上下兮，求矩矱之所同。<br>汤、禹俨而求合兮，挚、咎繇而能调。<br>苟中情其好修兮，又何必用夫行媒？<br>说操筑于傅岩兮，武丁用而不疑。<br>吕望之鼓刀兮，遭周文而得举。<br>宁戚之讴歌兮，齐桓闻以该辅。<br>及年岁之未晏兮，时亦犹其未央。<br>恐鹈鴃之先鸣兮，使夫百草为之不芳。」<br>何琼佩之偃蹇兮，众薆然而蔽之。<br>惟此党人之不谅兮，恐嫉妒而折之。<br>时缤纷其变易兮，又何可以淹留？<br>兰芷变而不芳兮，荃蕙化而为茅。<br>何昔日之芳草兮，今直为此萧艾也？<br>岂其有他故兮，莫好修之害也！<br>余以兰为可恃兮，羌无实而容长。<br>委厥美以从俗兮，苟得列乎众芳。<br>椒专佞以慢慆兮，樧又欲充夫佩帏。<br>既干进而务入兮，又何芳之能祗？<br>固时俗之流从兮，又孰能无变化？<br>览椒兰其若兹兮，又况揭车与江离？<br>惟兹佩之可贵兮，委厥美而历兹。<br>芳菲菲而难亏兮，芬至今犹未沬。<br>和调度以自娱兮，聊浮游而求女。<br>及余饰之方壮兮，周流观乎上下。<br>灵氛既告余以吉占兮，历吉日乎吾将行。<br>折琼枝以为羞兮，精琼爢以为粻。<br>为余驾飞龙兮，杂瑶象以为车。<br>何离心之可同兮？吾将远逝以自疏。<br>邅吾道夫昆仑兮，路修远以周流。<br>扬云霓之晻蔼兮，鸣玉鸾之啾啾。<br>朝发轫于天津兮，夕余至乎西极。<br>凤皇翼其承旗兮，高翱翔之翼翼。<br>忽吾行此流沙兮，遵赤水而容与。<br>麾蛟龙使梁津兮，诏西皇使涉予。<br>路修远以多艰兮，腾众车使径待。<br>路不周以左转兮，指西海以为期。<br>屯余车其千乘兮，齐玉轪而并驰。<br>驾八龙之婉婉兮，载云旗之委蛇。<br>抑志而弭节兮，神高驰之邈邈。<br>奏《九歌》而舞《韶》兮，聊假日以偷乐。<br>陟升皇之赫戏兮，忽临睨夫旧乡。<br>仆夫悲余马怀兮，蜷局顾而不行。<br>乱曰：已矣哉！<br>国无人莫我知兮，又何怀乎故都！<br>既莫足与为美政兮，吾将从彭咸之所居！ 
-</div>
-<script type="text/javascript" src="robot/robot.js?022107"></script>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🤖 Web Robot</h1>
+            <div class="header-actions">
+                <button class="btn-icon" onclick="toggleExportMenu()">
+                    📥 <span>导出</span>
+                </button>
+                <button class="btn-icon" onclick="clearChat()">
+                    🗑️ <span>清空</span>
+                </button>
+            </div>
+            <div class="export-menu" id="exportMenu">
+                <div class="export-menu-item" onclick="exportChat('txt')">📄 导出为 TXT</div>
+                <div class="export-menu-item" onclick="exportChat('json')">📋 导出为 JSON</div>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="empty-state" id="emptyState">
+                <div class="empty-state-icon">👋</div>
+                <h3>开始对话吧</h3>
+                <p>发送消息与机器人开始聊天</p>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        </div>
+
+        <div class="chat-input-container">
+            <input 
+                type="text" 
+                class="chat-input" 
+                id="messageInput" 
+                placeholder="输入消息..." 
+                maxlength="500"
+                onkeypress="handleKeyPress(event)"
+            >
+            <button class="btn-send" id="sendBtn" onclick="sendMessage()">
+                发送
+            </button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 聊天记录存储
+        let chatHistory = [];
+        let isTyping = false;
+
+        // DOM 元素
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const emptyState = document.getElementById('emptyState');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const exportMenu = document.getElementById('exportMenu');
+        const toast = document.getElementById('toast');
+
+        // 机器人回复模板
+        const botResponses = [
+            "你好！很高兴为你服务。",
+            "这是一个很有趣的话题，请继续说。",
+            "我明白了，还有其他问题吗？",
+            "谢谢你的分享！",
+            "我在听，请继续。",
+            "这是个好问题，让我想想...",
+            "你可以详细说说吗？",
+            "收到！还有其他需要帮助的吗？",
+            "哈哈，真有意思！",
+            "好的，我理解了。"
+        ];
+
+        // 发送消息
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || isTyping) return;
+
+            // 隐藏空状态
+            if (emptyState) {
+                emptyState.style.display = 'none';
+            }
+
+            // 添加用户消息
+            addMessage('user', message);
+            messageInput.value = '';
+
+            // 显示输入指示器
+            showTypingIndicator();
+
+            // 模拟机器人回复
+            isTyping = true;
+            sendBtn.disabled = true;
+
+            setTimeout(() => {
+                hideTypingIndicator();
+                const response = getBotResponse(message);
+                addMessage('bot', response);
+                isTyping = false;
+                sendBtn.disabled = false;
+            }, 1000 + Math.random() * 1000);
+        }
+
+        // 添加消息到聊天界面
+        function addMessage(type, content) {
+            const messageData = {
+                type: type,
+                content: content,
+                timestamp: new Date().toISOString()
+            };
+            chatHistory.push(messageData);
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+
+            const avatar = type === 'bot' ? '🤖' : '👤';
+            const time = formatTime(new Date());
+
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div>
+                    <div class="message-content">${escapeHtml(content)}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        // 获取机器人回复
+        function getBotResponse(userMessage) {
+            const lowerMessage = userMessage.toLowerCase();
+            
+            // 简单的关键词匹配
+            if (lowerMessage.includes('你好') || lowerMessage.includes('嗨') || lowerMessage.includes('hi')) {
+                return '你好！很高兴见到你！有什么我可以帮助你的吗？';
+            }
+            if (lowerMessage.includes('再见') || lowerMessage.includes('拜拜')) {
+                return '再见！祝你有个愉快的一天！';
+            }
+            if (lowerMessage.includes('谢谢')) {
+                return '不客气！很高兴能帮到你！';
+            }
+            if (lowerMessage.includes('时间') || lowerMessage.includes('几点')) {
+                return `现在是 ${new Date().toLocaleString('zh-CN')}`;
+            }
+            if (lowerMessage.includes('名字') || lowerMessage.includes('是谁')) {
+                return '我是 Web Robot，一个纯前端的聊天机器人！';
+            }
+
+            // 随机回复
+            return botResponses[Math.floor(Math.random() * botResponses.length)];
+        }
+
+        // 显示输入指示器
+        function showTypingIndicator() {
+            typingIndicator.classList.add('active');
+            scrollToBottom();
+        }
+
+        // 隐藏输入指示器
+        function hideTypingIndicator() {
+            typingIndicator.classList.remove('active');
+        }
+
+        // 滚动到底部
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 格式化时间
+        function formatTime(date) {
+            return date.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 处理回车键
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // 切换导出菜单
+        function toggleExportMenu() {
+            exportMenu.classList.toggle('active');
+        }
+
+        // 点击外部关闭菜单
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.btn-icon') && !event.target.closest('.export-menu')) {
+                exportMenu.classList.remove('active');
+            }
+        });
+
+        // 导出聊天记录
+        function exportChat(format) {
+            if (chatHistory.length === 0) {
+                showToast('没有可导出的聊天记录');
+                return;
+            }
+
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+            let content, filename, mimeType;
+
+            if (format === 'txt') {
+                content = generateTxtContent();
+                filename = `聊天记录_${timestamp}.txt`;
+                mimeType = 'text/plain;charset=utf-8';
+            } else {
+                content = JSON.stringify(chatHistory, null, 2);
+                filename = `聊天记录_${timestamp}.json`;
+                mimeType = 'application/json;charset=utf-8';
+            }
+
+            downloadFile(content, filename, mimeType);
+            exportMenu.classList.remove('active');
+            showToast(`已导出为 ${format.toUpperCase()} 格式`);
+        }
+
+        // 生成TXT格式内容
+        function generateTxtContent() {
+            let content = '================================\n';
+            content += '      聊天记录导出文件\n';
+            content += '================================\n\n';
+            
+            chatHistory.forEach((msg, index) => {
+                const time = new Date(msg.timestamp).toLocaleString('zh-CN');
+                const sender = msg.type === 'user' ? '我' : '机器人';
+                content += `[${time}] ${sender}:\n`;
+                content += `${msg.content}\n`;
+                content += '--------------------------------\n\n';
+            });
+
+            content += '================================\n';
+            content += `共 ${chatHistory.length} 条消息\n`;
+            content += '================================\n';
+
+            return content;
+        }
+
+        // 下载文件
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // 清空聊天记录
+        function clearChat() {
+            if (chatHistory.length === 0) {
+                showToast('聊天记录已经是空的');
+                return;
+            }
+
+            if (confirm('确定要清空所有聊天记录吗？')) {
+                chatHistory = [];
+                chatMessages.innerHTML = `
+                    <div class="empty-state" id="emptyState">
+                        <div class="empty-state-icon">👋</div>
+                        <h3>开始对话吧</h3>
+                        <p>发送消息与机器人开始聊天</p>
+                    </div>
+                `;
+                showToast('聊天记录已清空');
+            }
+        }
+
+        // 显示提示
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 页面加载完成后聚焦输入框
+        window.onload = function() {
+            messageInput.focus();
+        };
+    </script>
 </body>
 </html>
