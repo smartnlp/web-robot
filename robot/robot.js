@@ -10313,7 +10313,7 @@
 		html.push('<div class="'+ cssfix +'header-nav">');
 
 		html.push('<a href="javascript:void(0);" class="'+ cssfix +'icon-max'+ (_con.ismax ? ' '+ cssfix +'icon-nor' : '') +'"><em class="'+ cssfix +'icon"></em></a>');
-
+		html.push('<a href="javascript:void(0);" class="'+ cssfix +'icon-export" title="导出聊天记录"><em class="'+ cssfix +'icon"></em></a>');
 		html.push('<a href="javascript:void(0);" class="'+ cssfix +'icon-clo"><em class="'+ cssfix +'icon"></em></a>');
 		html.push('</div>');
 		html.push('</div>');
@@ -10958,6 +10958,7 @@
 				$bigCode.show().stop().animate({width: 220,height: 220});
 			});
 			$('.'+ cssfix +'icon-clo', $wrap).on('click', $.proxy(_this['remod'], _this));
+			$('.'+ cssfix +'icon-export', $wrap).on('click', $.proxy(_this['exportChat'], _this));
 			$('.'+ cssfix +'art,.'+ cssfix +'call', $wrap).on('click', $.proxy(_this['switchKefu'], _this));
 
 			$bigCode.click(function(){
@@ -11147,6 +11148,80 @@
 			}else{
 				_this.view.scrollTop(_this.chat.height() - _this.view.height() + 20);
 			};
+		}
+		//获取聊天记录
+		, 'getChatHistory': function(){
+			var _this = this;
+			var messages = [];
+			_this.chat.find('.'+ cssfix +'chat-ask, .'+ cssfix +'chat-replay').each(function(){
+				var $item = $(this);
+				var isUser = $item.hasClass(cssfix +'chat-ask');
+				var $name = $item.find('.'+ cssfix +'chat-name');
+				var $content = $item.find('.'+ cssfix +'msg-mm');
+				var text = $content.text().trim();
+				var nameTime = $name.text().trim();
+				var parts = nameTime.split(' ');
+				var nick = parts[0] || (isUser ? '我' : '机器人');
+				var time = parts[1] || '';
+				messages.push({
+					type: isUser ? 'user' : 'bot',
+					nick: nick,
+					time: time,
+					content: text
+				});
+			});
+			return messages;
+		}
+		//导出聊天记录
+		, 'exportChat': function(){
+			var _this = this;
+			var messages = _this.getChatHistory();
+			if(messages.length === 0){
+				alert('暂无聊天记录可导出');
+				return;
+			}
+			var format = prompt('请选择导出格式：\n输入 1 导出 TXT 格式\n输入 2 导出 JSON 格式', '1');
+			if(format === null) return;
+			var timestamp = new Date().toISOString().slice(0,19).replace(/[:-]/g,'');
+			var filename, content, mimeType;
+			if(format === '2'){
+				filename = 'chat_' + timestamp + '.json';
+				content = JSON.stringify({
+					exportTime: new Date().toLocaleString(),
+					total: messages.length,
+					messages: messages
+				}, null, 2);
+				mimeType = 'application/json';
+			}else{
+				filename = 'chat_' + timestamp + '.txt';
+				var lines = [];
+				lines.push('========== 聊天记录导出 ==========');
+				lines.push('导出时间: ' + new Date().toLocaleString());
+				lines.push('消息总数: ' + messages.length);
+				lines.push('==================================\n');
+				for(var i = 0; i < messages.length; i++){
+					var msg = messages[i];
+					var prefix = msg.type === 'user' ? '[我]' : '[' + msg.nick + ']';
+					lines.push(prefix + ' ' + msg.time);
+					lines.push(msg.content);
+					lines.push('');
+				}
+				content = lines.join('\n');
+				mimeType = 'text/plain';
+			}
+			var blob = new Blob([content], {type: mimeType + ';charset=utf-8'});
+			if(navigator.msSaveBlob){
+				navigator.msSaveBlob(blob, filename);
+			}else{
+				var url = URL.createObjectURL(blob);
+				var a = document.createElement('a');
+				a.href = url;
+				a.download = filename;
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+				URL.revokeObjectURL(url);
+			}
 		}
 		//发送一条消息
 		, 'send': function(text){
