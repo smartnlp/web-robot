@@ -10313,7 +10313,9 @@
 		html.push('<div class="'+ cssfix +'header-nav">');
 
 		html.push('<a href="javascript:void(0);" class="'+ cssfix +'icon-max'+ (_con.ismax ? ' '+ cssfix +'icon-nor' : '') +'"><em class="'+ cssfix +'icon"></em></a>');
-
+		
+		html.push('<a href="javascript:void(0);" class="'+ cssfix +'icon-export" title="导出聊天记录"><em class="'+ cssfix +'icon"></em></a>');
+		
 		html.push('<a href="javascript:void(0);" class="'+ cssfix +'icon-clo"><em class="'+ cssfix +'icon"></em></a>');
 		html.push('</div>');
 		html.push('</div>');
@@ -10958,6 +10960,7 @@
 				$bigCode.show().stop().animate({width: 220,height: 220});
 			});
 			$('.'+ cssfix +'icon-clo', $wrap).on('click', $.proxy(_this['remod'], _this));
+			$('.'+ cssfix +'icon-export', $wrap).on('click', $.proxy(_this['exportMenu'], _this));
 			$('.'+ cssfix +'art,.'+ cssfix +'call', $wrap).on('click', $.proxy(_this['switchKefu'], _this));
 
 			$bigCode.click(function(){
@@ -11149,8 +11152,8 @@
 			};
 		}
 		//发送一条消息
-		, 'send': function(text){
-			var _this = this;
+		, 'send': function(text, isRetry){
+			var _this = this, $answer;
 			if(!!_this.waiting){
 				return false;
 			};
@@ -11162,12 +11165,18 @@
 				return false;
 			};
 			var _con = _this.con;
-			var $question = _this.cSendEle({'text': text})
-				, $answer = _this.cReplyEle({'text': '<img src="http://img.alicdn.com/imgextra/i3/TB1tAEJJpXXXXXraXXXtKXbFXXX.gif"/>'});
+		if(!isRetry){
+			var $question = _this.cSendEle({'text': text});
+			$answer = _this.cReplyEle({'text': '<img src="http://img.alicdn.com/imgextra/i3/TB1tAEJJpXXXXXraXXXtKXbFXXX.gif"/>'});
 			_this.chat.append($question);
 			_this.chat.append($answer);
 			_this.scroll();
-			_jsonp({
+		}else{
+			//重试模式，找到最后一条机器人回复消息并更新loading状态
+			$answer = _this.chat.find('> div:last-child');
+			$('.'+ cssfix +'msg-mm .'+ cssfix +'htmcont', $answer).html('<img src="http://img.alicdn.com/imgextra/i3/TB1tAEJJpXXXXXraXXXtKXbFXXX.gif"/>');
+		}
+		_jsonp({
 				'url': apiUrl + _con.appid +'/answer'
 				, 'data' : {'q': encodeURIComponent(text)}
 				, 'success': function(data){
@@ -11196,7 +11205,11 @@
 					_this.scroll();
 				}
 				, 'error': function(){
-					$('.'+ cssfix +'msg-mm .'+ cssfix +'htmcont', $answer).html('会话丢失');
+					var retryBtn = '<a href="javascript:void(0);" class="retry-btn" style="display:inline-block;margin-left:10px;padding:2px 10px;background:#2d8ef2;color:#fff;border-radius:3px;font-size:12px;text-decoration:none;">重试</a>';
+					$('.'+ cssfix +'msg-mm .'+ cssfix +'htmcont', $answer).html('<span style="color:#999;">网络连接异常，请检查网络设置</span>' + retryBtn)
+						.find('.retry-btn').on('click', function(){
+							_this.send(text, true);
+						});
 				}
 			});
 		}
@@ -11335,6 +11348,118 @@
 				$(this).click(_imgViews);
 			});
 			return $ele;
+		}
+		//导出菜单
+		, 'exportMenu': function(){
+			var _this = this
+				, _con = _this.con
+				, $wrap = _this.wrap
+				, $exportMenu = $('.'+ cssfix +'export-menu', $wrap);
+			if($exportMenu.length === 0){
+				var menuHtml = '<div class="'+ cssfix +'export-menu" style="display:none;">'
+					+ '<a href="javascript:void(0);" class="'+ cssfix +'export-txt">导出为 TXT</a>'
+					+ '<a href="javascript:void(0);" class="'+ cssfix +'export-json">导出为 JSON</a>'
+					+ '</div>';
+				$('.'+ cssfix +'header-nav', $wrap).append(menuHtml);
+				$exportMenu = $('.'+ cssfix +'export-menu', $wrap);
+				$exportMenu.on('click', '.'+ cssfix +'export-txt', function(){
+					_this.exportToTXT();
+					$exportMenu.hide();
+				});
+				$exportMenu.on('click', '.'+ cssfix +'export-json', function(){
+					_this.exportToJSON();
+					$exportMenu.hide();
+				});
+				$(document).on('click.exportMenu', function(e){
+					if(!$(e.target).closest('.'+ cssfix +'icon-export, .'+ cssfix +'export-menu').length){
+						$exportMenu.hide();
+						$(document).off('click.exportMenu');
+					}
+				});
+			}
+			$exportMenu.toggle();
+		}
+		//获取聊天记录
+		, 'getChatRecords': function(){
+			var _this = this
+				, $chat = _this.chat
+				, records = []
+				, _con = _this.con;
+			$chat.find('.'+ cssfix +'chat-ask, .'+ cssfix +'chat-replay').each(function(){
+				var $item = $(this)
+					, isUser = $item.hasClass(cssfix +'chat-ask')
+					, nameText = $item.find('.'+ cssfix +'chat-name').text()
+					, nameMatch = nameText.match(/^(.+)\s+(\d{2}:\d{2}:\d{2})$/)
+					, nick = nameMatch ? nameMatch[1] : (isUser ? '我' : _con.nick)
+					, time = nameMatch ? nameMatch[2] : ''
+					, text = '';
+				if(isUser){
+					text = $item.find('.'+ cssfix +'msg-mm').text();
+				}else{
+					text = $item.find('.'+ cssfix +'htmcont').text();
+				}
+				records.push({
+					type: isUser ? 'user' : 'robot',
+					nick: nick,
+					time: time,
+					text: $.trim(text)
+				});
+			});
+			return records;
+		}
+		//导出为TXT格式
+		, 'exportToTXT': function(){
+			var _this = this
+				, records = _this.getChatRecords()
+				, content = ''
+				, _con = _this.con;
+			if(records.length === 0){
+				alert('暂无聊天记录可导出');
+				return;
+			}
+			content += '聊天记录导出时间：'+ _dateFormat.call(new Date(), 'yyyy-MM-dd hh:mm:ss') + '\r\n';
+			content += '========================================\r\n\r\n';
+			for(var i = 0, len = records.length; i < len; i++){
+				var r = records[i];
+				content += '['+ r.time + '] ' + r.nick + '\r\n';
+				content += r.text + '\r\n\r\n';
+			}
+			content += '========================================\r\n';
+			content += '共 '+ records.length + ' 条消息';
+			_this.downloadFile(content, 'chat-record-'+ _dateFormat.call(new Date(), 'yyyyMMddhhmmss') +'.txt', 'text/plain;charset=utf-8');
+		}
+		//导出为JSON格式
+		, 'exportToJSON': function(){
+			var _this = this
+				, records = _this.getChatRecords()
+				, _con = _this.con;
+			if(records.length === 0){
+				alert('暂无聊天记录可导出');
+				return;
+			}
+			var data = {
+				exportTime: _dateFormat.call(new Date(), 'yyyy-MM-dd hh:mm:ss'),
+				total: records.length,
+				robotName: _con.nick,
+				messages: records
+			};
+			var content = JSON.stringify(data, null, 2);
+			_this.downloadFile(content, 'chat-record-'+ _dateFormat.call(new Date(), 'yyyyMMddhhmmss') +'.json', 'application/json;charset=utf-8');
+		}
+		//下载文件
+		, 'downloadFile': function(content, filename, mimeType){
+			var BOM = '\uFEFF';
+			var blob = new Blob([BOM + content], {
+				type: mimeType
+			});
+			var url = URL.createObjectURL(blob);
+			var a = document.createElement('a');
+			a.href = url;
+			a.download = filename;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
 		}
 	};
 	//加载外部css样式

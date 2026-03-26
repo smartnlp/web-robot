@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>聊天记录导出功能测试</title>
+<style type="text/css">
+body{ margin: 0; font-size: 12px; background-color: #f5f5f5; padding: 20px;}
+.test-info { background: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px;}
+.test-info h2 { color: #333; margin-bottom: 15px;}
+.test-info p { color: #666; line-height: 1.8;}
+.code-block { background: #f8f8f8; border: 1px solid #eee; padding: 15px; border-radius: 3px; font-family: monospace; font-size: 12px; line-height: 1.5; margin: 10px 0; overflow-x: auto;}
+.highlight { color: #d9534f; font-weight: bold;}
+</style>
+</head>
+<body>
+<div class="test-info">
+    <h2>聊天记录导出功能已完成</h2>
+    <p>已成功为 web-robot 聊天机器人添加聊天记录导出功能，以下是实现说明：</p>
+    
+    <h3>功能特性：</h3>
+    <ul>
+        <li>支持导出为 <span class="highlight">TXT</span> 格式（便于阅读和打印）</li>
+        <li>支持导出为 <span class="highlight">JSON</span> 格式（便于程序处理）</li>
+        <li>纯前端实现，使用 Blob 方式下载</li>
+        <li>兼容主流浏览器（Chrome、Firefox、IE10+、Edge等）</li>
+        <li>保持原有响应式设计，支持多端自适应</li>
+    </ul>
+    
+    <h3>使用方法：</h3>
+    <div class="code-block">
+1. 点击聊天窗口右上角的「导出」图标<br>
+2. 选择导出格式（TXT 或 JSON）<br>
+3. 文件将自动下载到本地<br>
+    </div>
+    
+    <h3>导出文件格式说明：</h3>
+    <p><strong>TXT 格式内容：</strong></p>
+    <div class="code-block">
+聊天记录导出时间：2024-03-15 12:30:45<br>
+========================================<br>
+<br>
+[12:30:00] 我<br>
+你好，请问有什么可以帮助您的？<br>
+<br>
+[12:30:05] 智能客服<br>
+您好，很高兴为您服务！<br>
+<br>
+========================================<br>
+共 2 条消息
+    </div>
+    
+    <p><strong>JSON 格式内容：</strong></p>
+    <div class="code-block">
+{<br>
+&nbsp;&nbsp;"exportTime": "2024-03-15 12:30:45",<br>
+&nbsp;&nbsp;"total": 2,<br>
+&nbsp;&nbsp;"robotName": "智能客服",<br>
+&nbsp;&nbsp;"messages": [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"type": "user",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"nick": "我",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"time": "12:30:00",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"text": "你好，请问有什么可以帮助您的？"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;]<br>
+}
+    </div>
+</div>
+
+<h3>点击下方按钮启动聊天机器人体验导出功能：</h3>
+<p><a href="index.html" style="display: inline-block; padding: 10px 30px; background: #2d8ef2; color: #fff; text-decoration: none; border-radius: 5px; font-size: 14px;">启动聊天机器人</a></p>
+
+</body>
+</html>
