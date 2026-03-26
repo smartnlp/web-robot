@@ -10314,6 +10314,7 @@
 
 		html.push('<a href="javascript:void(0);" class="'+ cssfix +'icon-max'+ (_con.ismax ? ' '+ cssfix +'icon-nor' : '') +'"><em class="'+ cssfix +'icon"></em></a>');
 
+		html.push('<a href="javascript:void(0);" class="'+ cssfix +'icon-export" title="导出聊天记录"><em class="'+ cssfix +'icon"></em></a>');
 		html.push('<a href="javascript:void(0);" class="'+ cssfix +'icon-clo"><em class="'+ cssfix +'icon"></em></a>');
 		html.push('</div>');
 		html.push('</div>');
@@ -10952,7 +10953,8 @@
 			var $bigCode = $('.'+ cssfix +'big-code', $wrap);
 			$('.'+ cssfix +'fr-nav a', $wrap).on('click', $.proxy(_this.tab, _this));
 			$('.'+ cssfix +'icon-max,.'+ cssfix +'slide-btn', $wrap).on('click', $.proxy(_this['zoom'], _this));
-			$('.'+ cssfix +'btn-send', $wrap).on('click', $.proxy(_this['submit'], _this));
+		$('.'+ cssfix +'icon-export', $wrap).on('click', $.proxy(_this['exportChat'], _this));
+		$('.'+ cssfix +'btn-send', $wrap).on('click', $.proxy(_this['submit'], _this));
 			$('.'+ cssfix +'fr-panel ul a', $wrap).on('click', function(){_this.send($(this).text());});
 			$('.'+ cssfix +'code a', $wrap).on('click', function(){
 				$bigCode.show().stop().animate({width: 220,height: 220});
@@ -11147,6 +11149,117 @@
 			}else{
 				_this.view.scrollTop(_this.chat.height() - _this.view.height() + 20);
 			};
+		}
+		//导出聊天记录
+		, 'exportChat': function(e){
+			var _this = this;
+			var $chat = _this.chat;
+			var messages = [];
+			var hasContent = false;
+			
+			$chat.children().each(function(){
+				var $item = $(this);
+				var isAsk = $item.hasClass(cssfix + 'chat-ask');
+				var isReply = $item.hasClass(cssfix + 'chat-replay');
+				var isLog = $item.hasClass(cssfix + 'chat-t');
+				
+				if(isAsk){
+					var text = $item.find('.' + cssfix + 'msg-mm').text() || '';
+					var time = $item.find('.' + cssfix + 'chat-name').text() || '';
+					if(text && text !== '&nbsp;'){
+						messages.push({
+							type: 'user',
+							nick: '我',
+							time: time,
+							content: text.trim()
+						});
+						hasContent = true;
+					}
+				}else if(isReply){
+					var text = $item.find('.' + cssfix + 'htmcont').text() || '';
+					var time = $item.find('.' + cssfix + 'chat-name').text() || '';
+					if(text && text !== '&nbsp;'){
+						messages.push({
+							type: 'robot',
+							nick: _this.con.nick,
+							time: time,
+							content: text.trim()
+						});
+						hasContent = true;
+					}
+				}else if(isLog){
+					var text = $item.find('span').text() || '';
+					if(text){
+						messages.push({
+							type: 'system',
+							nick: '系统',
+							time: _dateFormat.call(new Date(), 'yyyy-MM-dd hh:mm:ss'),
+							content: text.trim()
+						});
+					}
+				}
+			});
+			
+			if(!hasContent){
+				alert('暂无聊天记录可导出');
+				return;
+			}
+			
+			var format = confirm('点击"确定"导出为JSON格式，点击"取消"导出为TXT格式') ? 'json' : 'txt';
+			var blob, filename, mimeType;
+			
+			if(format === 'json'){
+				var exportData = {
+					exportTime: _dateFormat.call(new Date(), 'yyyy-MM-dd hh:mm:ss'),
+					robotName: _this.con.nick,
+					messageCount: messages.length,
+					messages: messages
+				};
+				var content = JSON.stringify(exportData, null, 2);
+				blob = new Blob([content], {type: 'application/json;charset=utf-8'});
+				filename = '聊天记录_' + _dateFormat.call(new Date(), 'yyyyMMdd_hhmmss') + '.json';
+				mimeType = 'application/json';
+			}else{
+				var lines = [];
+				lines.push('====================================');
+				lines.push('  聊天记录导出');
+				lines.push('  导出时间: ' + _dateFormat.call(new Date(), 'yyyy-MM-dd hh:mm:ss'));
+				lines.push('  机器人: ' + _this.con.nick);
+				lines.push('====================================');
+				lines.push('');
+				
+				for(var i = 0; i < messages.length; i++){
+					var msg = messages[i];
+					lines.push('[' + msg.time + '] ' + msg.nick + ':');
+					lines.push(msg.content);
+					lines.push('');
+				}
+				lines.push('====================================');
+				lines.push('  共 ' + messages.length + ' 条消息');
+				lines.push('====================================');
+				
+				var content = lines.join('\r\n');
+				blob = new Blob([content], {type: 'text/plain;charset=utf-8'});
+				filename = '聊天记录_' + _dateFormat.call(new Date(), 'yyyyMMdd_hhmmss') + '.txt';
+				mimeType = 'text/plain';
+			}
+			
+			// 使用 Blob 下载
+			if(window.navigator && window.navigator.msSaveOrOpenBlob){
+				// IE/Edge
+				window.navigator.msSaveOrOpenBlob(blob, filename);
+			}else{
+				// 现代浏览器
+				var url = window.URL.createObjectURL(blob);
+				var link = document.createElement('a');
+				link.href = url;
+				link.download = filename;
+				link.style.display = 'none';
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+				window.URL.revokeObjectURL(url);
+			}
 		}
 		//发送一条消息
 		, 'send': function(text){
