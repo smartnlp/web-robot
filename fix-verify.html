@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>修复验证页面</title>
+<style type="text/css">
+body{ margin: 0; font-size: 14px; background-color: #f5f5f5; padding: 30px; font-family: "Microsoft Yahei", sans-serif;}
+.test-container { max-width: 800px; margin: 0 auto; }
+.test-title { color: #333; margin-bottom: 20px; font-size: 24px; }
+.test-section { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+.test-section h3 { color: #2d8ef2; margin-top: 0; margin-bottom: 15px; font-size: 18px; }
+.test-item { margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px; }
+.test-status { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 12px; margin-right: 10px; }
+.test-pass { background: #d4edda; color: #155724; }
+.test-fail { background: #f8d7da; color: #721c24; }
+.icon-demo { display: inline-block; width: 44px; height: 44px; background: #2d8ef2; position: relative; vertical-align: middle; margin-right: 15px; }
+.icon-demo em { position: absolute; top: 12px; right: 12px; width: 20px; height: 20px; display: block; }
+.icon-demo em:before { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border: 2px solid #fff; border-right: none; border-bottom: none; -webkit-transform: rotate(-45deg); transform: rotate(-45deg); }
+.icon-demo em:after { content: ''; position: absolute; bottom: 2px; left: 2px; width: 16px; height: 2px; background: #fff; }
+.desc { color: #666; font-size: 14px; line-height: 1.6; }
+.code-block { background: #f8f9fa; border: 1px solid #e9ecef; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 13px; overflow-x: auto; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="test-container">
+    <h1 class="test-title">web-robot 修复验证</h1>
+    
+    <div class="test-section">
+        <h3>问题修复清单</h3>
+        
+        <div class="test-item">
+            <span class="test-status test-pass">已修复</span>
+            <strong>问题1：导出图标不明显</strong>
+            <p class="desc">修复前：依赖背景图片定位，图标可能不显示或显示异常</p>
+            <p class="desc">修复后：使用纯CSS绘制导出图标，确保在任何情况下都能正确显示</p>
+            <div style="margin-top:10px;">
+                <span style="vertical-align:middle; margin-right:10px;">导出图标预览：</span>
+                <div class="icon-demo" title="导出聊天记录"><em></em></div>
+                <span style="vertical-align:middle; color:#666;">（点击可显示导出菜单）</span>
+            </div>
+        </div>
+        
+        <div class="test-item">
+            <span class="test-status test-pass">已修复</span>
+            <strong>问题2：会话丢失提示不友好</strong>
+            <p class="desc">修复前：显示"会话丢失"，用户不知道如何处理</p>
+            <p class="desc">修复后：显示"网络连接异常，请检查网络设置"，并提供【重试】按钮</p>
+            <div class="code-block">
+// 修复后的错误提示
+网络连接异常，请检查网络设置 <a href="#" style="display:inline-block;margin-left:10px;padding:2px 10px;background:#2d8ef2;color:#fff;border-radius:3px;font-size:12px;text-decoration:none;">重试</a>
+            </div>
+        </div>
+        
+        <div class="test-item">
+            <span class="test-status test-pass">已优化</span>
+            <strong>新增功能：消息重试机制</strong>
+            <p class="desc">用户点击重试按钮时，不会重复添加用户消息到聊天区域，直接重试请求</p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h3>技术实现说明</h3>
+        <div class="code-block">
+文件：robot/css/robot.css
+- 使用CSS伪元素(:before, :after)绘制导出图标
+- 移除对背景图片的依赖，确保图标可显示
+- 优化hover效果，提升用户体验
+
+文件：robot/robot.js
+- 修改send函数，添加isRetry参数支持
+- 错误处理中添加重试按钮和点击事件
+- 优化错误提示文案，更加用户友好
+- 重试模式下更新loading状态而非新建消息
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h3>测试方式</h3>
+        <p class="desc">1. 点击下方按钮启动聊天机器人</p>
+        <p class="desc">2. 观察右上角导出图标是否清晰可见</p>
+        <p class="desc">3. 测试网络异常情况下的错误提示（可通过断开网络模拟）</p>
+        <p style="margin-top:20px;">
+            <a href="index.html" style="display:inline-block;padding:12px 30px;background:#2d8ef2;color:#fff;text-decoration:none;border-radius:5px;font-size:16px;">启动聊天机器人测试</a>
+        </p>
+    </div>
+</div>
+</body>
+</html>
